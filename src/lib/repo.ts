@@ -10,6 +10,7 @@ export type Book = {
   status: string;
   words: number;
   views: number;
+  source: string;
   updated_at: string;
 };
 

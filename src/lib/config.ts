@@ -49,3 +49,12 @@ export const categories = [
 export function categoryName(slug: string): string {
   return categories.find((c) => c.slug === slug)?.name || slug;
 }
+
+// 从采集来源拼 69shuba 的封面图 URL（cdn 有规律：前2位/全id/全id+s.jpg）
+export function coverUrl(source?: string, cover?: string): string | null {
+  if (cover) return cover;
+  const m = (source || "").match(/^69shuba:(\d+)$/);
+  if (!m) return null;
+  const id = m[1];
+  return `https://cdn.cdnshu.com/files/article/image/${id.slice(0, 2)}/${id}/${id}s.jpg`;
+}

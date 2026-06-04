@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBook, getChapter, chapterCount, allChapterParams } from "@/lib/repo";
+import { getBook, getChapter, listChapters, allChapterParams } from "@/lib/repo";
 import { categoryName, site } from "@/lib/config";
 import JsonLd from "@/components/JsonLd";
 import ViewBeacon from "@/components/ViewBeacon";
@@ -40,7 +40,13 @@ export default async function ChapterPage({ params }: Props) {
   const chap = book ? await getChapter(bookId, idx) : undefined;
   if (!book || !chap) notFound();
 
-  const total = await chapterCount(bookId);
+  // 按「实际存在的章节列表」算上/下章，避免残缺章节导致点下一章 404
+  const chapters = await listChapters(bookId);
+  const pos = chapters.findIndex((c) => c.idx === idx);
+  const total = chapters.length;
+  const prevIdx = pos > 0 ? chapters[pos - 1].idx : null;
+  const nextIdx = pos >= 0 && pos < total - 1 ? chapters[pos + 1].idx : null;
+  const curNo = pos >= 0 ? pos + 1 : idx; // 第几章（连续显示）
 
   return (
     <>
@@ -57,11 +63,11 @@ export default async function ChapterPage({ params }: Props) {
         bookId={bookId}
         bookTitle={book.title}
         chapterTitle={chap.title}
-        idx={idx}
+        idx={curNo}
         total={total}
         content={chap.content}
-        prevHref={idx > 1 ? `/book/${bookId}/${idx - 1}` : null}
-        nextHref={idx < total ? `/book/${bookId}/${idx + 1}` : null}
+        prevHref={prevIdx ? `/book/${bookId}/${prevIdx}` : null}
+        nextHref={nextIdx ? `/book/${bookId}/${nextIdx}` : null}
         catalogHref={`/book/${bookId}`}
       />
     </>

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBook, listChapters, hotRanking, allBookIds } from "@/lib/repo";
-import { categoryName, site } from "@/lib/config";
+import { categoryName, coverUrl, site } from "@/lib/config";
 import AdSlot from "@/components/AdSlot";
+import Cover from "@/components/Cover";
 import JsonLd from "@/components/JsonLd";
 import { bookJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
-export const revalidate = 86400; // 构建时预渲染静态 + 每天再生
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   const books = await allBookIds();
@@ -26,13 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${book.title} - ${book.author}`,
     description: desc,
     alternates: { canonical: url },
-    openGraph: {
-      title: `${book.title} - ${book.author}`,
-      description: desc,
-      url,
-      type: "book",
-      locale: "zh_CN",
-    },
+    openGraph: { title: `${book.title} - ${book.author}`, description: desc, url, type: "book", locale: "zh_CN" },
   };
 }
 
@@ -42,114 +37,93 @@ export default async function BookPage({ params }: Props) {
   if (!book) notFound();
 
   const [chapters, hot] = await Promise.all([listChapters(book.id), hotRanking(10)]);
+  const firstIdx = chapters[0]?.idx;
+  const lastIdx = chapters[chapters.length - 1]?.idx;
 
   return (
     <div className="space-y-3">
-      <JsonLd
-        data={[
-          bookJsonLd(book, chapters.length),
-          breadcrumbJsonLd([
-            { name: "首页", path: "/" },
-            { name: categoryName(book.category), path: `/category/${book.category}` },
-            { name: book.title, path: `/book/${book.id}` },
-          ]),
-        ]}
-      />
-      {/* 面包屑 */}
+      <JsonLd data={[
+        bookJsonLd(book, chapters.length),
+        breadcrumbJsonLd([
+          { name: "首页", path: "/" },
+          { name: categoryName(book.category), path: `/category/${book.category}` },
+          { name: book.title, path: `/book/${book.id}` },
+        ]),
+      ]} />
       <nav className="px-1 text-[12px] text-[var(--muted)]">
         <Link href="/" className="link">首页</Link> &gt;{" "}
-        <Link href={`/category/${book.category}`} className="link">
-          {categoryName(book.category)}
-        </Link>{" "}
-        &gt; {book.title}
+        <Link href={`/category/${book.category}`} className="link">{categoryName(book.category)}</Link> &gt; {book.title}
       </nav>
 
-      <AdSlot place="homeTop" />
-
-      <div className="grid gap-3 md:grid-cols-[1fr_280px]">
-        <div className="space-y-3">
-          {/* 书籍信息 */}
-          <section className="panel p-4">
-            <div className="flex gap-4">
-              <div className="grid h-44 w-32 shrink-0 place-items-center rounded bg-gradient-to-br from-[#c0392b] to-[#7b1010] px-2 text-center text-lg font-bold text-white">
-                {book.title}
+      {/* 书籍信息卡 */}
+      <section className="panel p-4">
+        <div className="flex gap-4">
+          <Cover src={coverUrl(book.source, book.cover)} title={book.title} className="h-40 w-[7.5rem] shrink-0 rounded-lg shadow" />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-bold text-[#222]">{book.title}</h1>
+            <div className="mt-2 space-y-1 text-[13px] text-[#666]">
+              <p>{book.author}</p>
+              <p>{categoryName(book.category)} · {book.status} · {chapters.length} 章</p>
+              <p>{(book.views / 10000).toFixed(1)}万点击</p>
+            </div>
+            {chapters.length > 0 && (
+              <div className="mt-3 flex gap-2">
+                <Link href={`/book/${book.id}/${firstIdx}`} className="flex-1 rounded-lg bg-[var(--accent)] py-2.5 text-center text-[14px] font-medium text-white active:opacity-80">开始阅读</Link>
+                <Link href={`/book/${book.id}/${lastIdx}`} className="flex-1 rounded-lg border border-[var(--border)] py-2.5 text-center text-[14px] text-[#555] active:border-[var(--accent)]">读最新</Link>
               </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl font-bold text-[#222]">{book.title}</h1>
-                <div className="mt-2 space-y-1 text-[13px] text-[#666]">
-                  <p>作者：{book.author}</p>
-                  <p>分类：{categoryName(book.category)} · {book.status}</p>
-                  <p>字数：约 {book.words} 字 · 点击：{(book.views / 10000).toFixed(1)}万</p>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  {chapters.length > 0 && (
-                    <>
-                      <Link
-                        href={`/book/${book.id}/1`}
-                        className="rounded bg-[var(--accent)] px-5 py-2 text-[13px] text-white hover:opacity-90"
-                      >
-                        开始阅读
-                      </Link>
-                      <Link
-                        href={`/book/${book.id}/${chapters.length}`}
-                        className="rounded border border-[var(--border)] px-5 py-2 text-[13px] text-[#555] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                      >
-                        最新章节
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 border-t border-dashed border-[#eee] pt-3">
-              <h2 className="mb-1 text-[14px] font-bold text-[#333]">内容简介</h2>
-              <p className="text-[13px] leading-relaxed text-[#666]">{book.intro}</p>
-            </div>
-          </section>
-
-          {/* 章节目录 */}
-          <section className="panel">
-            <div className="block-head">
-              <h2>章节目录</h2>
-              <span className="more">共 {chapters.length} 章</span>
-            </div>
-            {chapters.length === 0 ? (
-              <p className="p-6 text-center text-[13px] text-[var(--muted)]">暂无章节。</p>
-            ) : (
-              <ul className="grid grid-cols-1 gap-x-4 p-3 sm:grid-cols-2">
-                {chapters.map((c) => (
-                  <li key={c.idx} className="border-b border-dashed border-[#f0f0f0]">
-                    <Link
-                      href={`/book/${book.id}/${c.idx}`}
-                      className="block truncate py-2 text-[13px] text-[#555] hover:text-[var(--accent)]"
-                    >
-                      {c.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             )}
-          </section>
+          </div>
         </div>
+        <div className="mt-4 border-t border-dashed border-[#eee] pt-3">
+          <h2 className="mb-1 text-[14px] font-bold text-[#333]">内容简介</h2>
+          <p className="text-[13px] leading-relaxed text-[#666]">{book.intro || "暂无简介。"}</p>
+        </div>
+      </section>
 
-        {/* 侧边榜单 */}
-        <aside className="space-y-3">
-          <AdSlot place="bookDetail" />
-          <section className="panel">
-            <div className="block-head"><h2>点击排行</h2></div>
-            <ol className="p-3">
-              {hot.map((b, i) => (
-                <li key={b.id} className="flex items-center gap-2 py-1.5 text-[13px]">
-                  <span className={`rank-no ${i < 3 ? "top" : ""}`}>{i + 1}</span>
-                  <Link href={`/book/${b.id}`} className="link flex-1 truncate">
-                    {b.title}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </aside>
-      </div>
+      <AdSlot place="bookDetail" />
+
+      {/* 章节目录（大点击区，手机好点）*/}
+      <section className="panel">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2.5">
+          <h2 className="border-l-4 border-[var(--accent)] pl-2 text-[15px] font-bold">章节目录</h2>
+          <span className="text-[12px] text-[var(--muted)]">共 {chapters.length} 章</span>
+        </div>
+        {chapters.length === 0 ? (
+          <p className="p-6 text-center text-[13px] text-[var(--muted)]">暂无章节。</p>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2">
+            {chapters.map((c) => (
+              <li key={c.idx} className="border-b border-dashed border-[#f0f0f0]">
+                <Link href={`/book/${book.id}/${c.idx}`}
+                  className="flex min-h-[46px] items-center truncate px-3 py-3 text-[14px] text-[#444] active:bg-[#fcf7f7] active:text-[var(--accent)]">
+                  {c.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* 点击排行 */}
+      <section className="panel">
+        <div className="border-b border-[var(--border)] px-3 py-2.5">
+          <h2 className="border-l-4 border-[var(--accent)] pl-2 text-[15px] font-bold">点击排行</h2>
+        </div>
+        <ol className="p-2">
+          {hot.map((b, i) => (
+            <li key={b.id}>
+              <Link href={`/book/${b.id}`} className="flex items-center gap-3 rounded-lg p-2 active:bg-[#fcf7f7]">
+                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded text-[13px] font-bold ${i < 3 ? "bg-[var(--accent)] text-white" : "bg-[#eee] text-[#888]"}`}>{i + 1}</span>
+                <Cover src={coverUrl(b.source, b.cover)} title={b.title} className="h-14 w-11 shrink-0 rounded" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-medium">{b.title}</p>
+                  <p className="truncate text-[12px] text-[var(--muted)]">{b.author}</p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }
