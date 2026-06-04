@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 /* ===== 经典书库风主题（69shuba 同类版式）：固定浅色 ===== */
+@keyframes loadingbar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
 @layer base {
   :root {
     --bg: #f4f4f4;          /* 页面背景灰 */

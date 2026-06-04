@@ -28,7 +28,7 @@ export default function ReaderShell(p: Props) {
   const [lh, setLh] = useState(1.9);
   const [themeKey, setThemeKey] = useState("white");
   const [bright, setBright] = useState(0); // 0~0.55 暗色遮罩
-  const [bars, setBars] = useState(false);
+  const [bars, setBars] = useState(true); // 默认显示工具栏(可发现返回/目录/设置)，点中间收起进入沉浸
   const [panel, setPanel] = useState(false);
   const startY = useRef(0);
 
