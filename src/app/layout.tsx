@@ -19,6 +19,11 @@ export const metadata: Metadata = {
     type: "website",
     locale: "zh_CN",
   },
+  // 站长验证：值从环境变量来，拿到验证码填进 Netlify 环境变量即可
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION || undefined,
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
+  },
 };
 
 export default function RootLayout({
