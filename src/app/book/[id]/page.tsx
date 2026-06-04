@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBook, listChapters, hotRanking } from "@/lib/repo";
+import { getBook, listChapters, hotRanking, allBookIds } from "@/lib/repo";
 import { categoryName, site } from "@/lib/config";
 import AdSlot from "@/components/AdSlot";
 import JsonLd from "@/components/JsonLd";
 import { bookJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
-export const revalidate = 600; // ISR 静态化
+export const revalidate = 86400; // 构建时预渲染静态 + 每天再生
+
+export async function generateStaticParams() {
+  const books = await allBookIds();
+  return books.map((b) => ({ id: String(b.id) }));
+}
 
 type Props = { params: Promise<{ id: string }> };
 

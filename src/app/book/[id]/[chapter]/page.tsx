@@ -1,13 +1,19 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBook, getChapter, chapterCount } from "@/lib/repo";
+import { getBook, getChapter, chapterCount, allChapterParams } from "@/lib/repo";
 import { categoryName, site } from "@/lib/config";
 import JsonLd from "@/components/JsonLd";
 import ViewBeacon from "@/components/ViewBeacon";
 import ReaderShell from "@/components/ReaderShell";
 import { breadcrumbJsonLd } from "@/lib/seo";
 
-export const revalidate = 3600; // ISR
+export const revalidate = 86400; // 构建时预渲染为静态 + 每天再生
+
+// 构建时把所有章节预渲染成静态 HTML（CDN 秒开，不再每次查库）
+export async function generateStaticParams() {
+  const rows = await allChapterParams();
+  return rows.map((r) => ({ id: String(r.book_id), chapter: String(r.idx) }));
+}
 
 type Props = { params: Promise<{ id: string; chapter: string }> };
 

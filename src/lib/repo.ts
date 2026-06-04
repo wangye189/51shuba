@@ -78,6 +78,13 @@ export async function allBookIds(): Promise<{ id: number; updated_at: string }[]
   return r.rows as unknown as { id: number; updated_at: string }[];
 }
 
+// 构建时静态预渲染用：全部 (书id, 章节序号)
+export async function allChapterParams(): Promise<{ book_id: number; idx: number }[]> {
+  const db = await getDb();
+  const r = await db.execute(`SELECT book_id, idx FROM chapters`);
+  return r.rows as unknown as { book_id: number; idx: number }[];
+}
+
 // ===== 首页榜单/列表 =====
 export type BookRow = Book & { last_title: string | null; chap_count: number };
 

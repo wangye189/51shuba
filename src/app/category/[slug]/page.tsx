@@ -8,7 +8,11 @@ import AdSlot from "@/components/AdSlot";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
 
-export const revalidate = 600; // ISR
+export const revalidate = 86400; // 构建时预渲染静态 + 每天再生
+
+export function generateStaticParams() {
+  return categories.map((c) => ({ slug: c.slug }));
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
