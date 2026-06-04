@@ -23,8 +23,8 @@ const THEMES = [
 const FS_MIN = 15, FS_MAX = 30;
 
 export default function ReaderShell(p: Props) {
-  const [fs, setFs] = useState(19);
-  const [lh, setLh] = useState(1.9);
+  const [fs, setFs] = useState(20);
+  const [lh, setLh] = useState(2.0);
   const [themeKey, setThemeKey] = useState("white");
   const [bright, setBright] = useState(0);
   const [bars, setBars] = useState(true);
@@ -33,8 +33,8 @@ export default function ReaderShell(p: Props) {
   const theme = THEMES.find((t) => t.key === themeKey) || THEMES[0];
 
   useEffect(() => {
-    setFs(Number(localStorage.getItem("rd_fs")) || 19);
-    setLh(Number(localStorage.getItem("rd_lh")) || 1.9);
+    setFs(Number(localStorage.getItem("rd_fs")) || 20);
+    setLh(Number(localStorage.getItem("rd_lh")) || 2.0);
     setThemeKey(localStorage.getItem("rd_theme") || "white");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
     document.documentElement.classList.add("reader-mode");
@@ -76,9 +76,9 @@ export default function ReaderShell(p: Props) {
       {/* 顶栏（纯主题色，夜间不发白）*/}
       <header className="fixed inset-x-0 top-0 z-[70] flex h-12 items-center gap-2 px-3 transition-transform duration-200"
         style={{ background: theme.bar, borderBottom: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(-110%)" }}>
-        <Link href={`/book/${p.bookId}`} className="shrink-0 px-1 text-xl leading-none" aria-label="返回">‹</Link>
-        <div className="min-w-0 flex-1 truncate text-[14px] font-medium">{p.bookTitle}</div>
-        <span className="shrink-0 text-[12px] opacity-60">{p.idx}/{p.total}</span>
+        <Link href={`/book/${p.bookId}`} className="shrink-0 px-1 text-2xl leading-none" aria-label="返回">‹</Link>
+        <div className="min-w-0 flex-1 truncate text-[14px] font-medium">{p.chapterTitle}</div>
+        <Link href={p.catalogHref} className="shrink-0 px-1 text-[13px]">目录</Link>
       </header>
 
       {/* 正文 */}
