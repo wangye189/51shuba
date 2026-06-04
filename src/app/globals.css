@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* ===== 经典书库风主题（69shuba 同类版式）：固定浅色 ===== */
+@layer base {
+  :root {
+    --bg: #f4f4f4;          /* 页面背景灰 */
+    --panel: #ffffff;       /* 内容面板白 */
+    --border: #e3e3e3;      /* 边框 */
+    --text: #333333;        /* 正文 */
+    --muted: #999999;       /* 次要文字 */
+    --accent: #b8001f;      /* 主色：深红 */
+    --accent-2: #c0392b;    /* 链接 hover */
+    --nav-bg: #2b2b2b;      /* 顶部分类导航条：深灰黑 */
+    --link: #1a4f8b;        /* 普通链接蓝（书名/章节）*/
+  }
+
+  html { background: var(--bg); }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+  a { color: inherit; text-decoration: none; }
+}
+
+@layer components {
+  /* 白色内容面板 */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+
+  /* 区块标题：左侧色条 + 标题 + 右侧「更多」 */
+  .block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 36px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+  .block-head h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    border-left: 4px solid var(--accent);
+    padding-left: 8px;
+    line-height: 1;
+  }
+  .block-head .more { font-size: 12px; color: var(--muted); }
+  .block-head .more:hover { color: var(--accent); }
+
+  /* 书名/章节链接：蓝色，hover 红 */
+  .link { color: var(--link); }
+  .link:hover { color: var(--accent); }
+
+  /* 最新更新表格 */
+  .up-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .up-table th {
+    background: #fafafa;
+    color: #666;
+    font-weight: 400;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .up-table td {
+    padding: 7px 10px;
+    border-bottom: 1px dashed #eee;
+    color: #555;
+  }
+  .up-table tr:hover td { background: #fcf7f7; }
+
+  /* 阅读器主题（字号/行距/配色，可调，记忆到 localStorage）*/
+  #reader {
+    --reader-fs: 18px;
+    --reader-lh: 1.9;
+    --reader-bg: #ffffff;
+    --reader-fg: #333333;
+    background: var(--reader-bg);
+    color: var(--reader-fg);
+  }
+  #reader[data-theme="sepia"] { --reader-bg: #f5ecd8; --reader-fg: #5b4636; }
+  #reader[data-theme="night"] { --reader-bg: #1a1a1a; --reader-fg: #c2c2c2; }
+  #reader .reader-body { font-size: var(--reader-fs); line-height: var(--reader-lh); }
+  #reader .reader-body p { font-size: var(--reader-fs); line-height: var(--reader-lh); }
+
+  /* 排行榜：序号方块 */
+  .rank-no {
+    display: inline-grid;
+    place-items: center;
+    width: 18px; height: 18px;
+    font-size: 12px; color: #fff;
+    background: #bbb; border-radius: 2px;
+  }
+  .rank-no.top { background: var(--accent); }
+}
