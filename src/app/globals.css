@@ -87,6 +87,13 @@
   #reader .reader-body { font-size: var(--reader-fs); line-height: var(--reader-lh); }
   #reader .reader-body p { font-size: var(--reader-fs); line-height: var(--reader-lh); }
 
+  /* 沉浸式阅读模式：锁背景滚动 + 隐藏全站头尾（阅读器 fixed 全屏接管）*/
+  html.reader-mode, html.reader-mode body { overflow: hidden; height: 100%; }
+  html.reader-mode body > .site-bar,
+  html.reader-mode body > header,
+  html.reader-mode body > nav,
+  html.reader-mode body > footer { display: none !important; }
+
   /* 排行榜：序号方块 */
   .rank-no {
     display: inline-grid;

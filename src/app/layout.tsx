@@ -33,7 +33,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className="min-h-screen flex flex-col">
         {/* 顶部细条 */}
-        <div className="border-b border-[var(--border)] bg-white text-xs text-[var(--muted)]">
+        <div className="site-bar border-b border-[var(--border)] bg-white text-xs text-[var(--muted)]">
           <div className="mx-auto flex max-w-[1000px] items-center justify-between px-3 py-1.5">
             <span>{site.slogan}</span>
             <span className="flex gap-3">
@@ -105,7 +105,7 @@ export default function RootLayout({
               <Link href="/sitemap.xml" className="hover:text-[var(--accent)]">网站地图</Link>
             </p>
             <p>© 2026 {site.name} · {site.slogan}</p>
-            <p>本站为技术演示，演示内容均为版权过期之公版古籍。</p>
+            <p>本站收录内容均来自网络，版权归原作者所有；如有侵权请联系我们删除。</p>
           </div>
         </footer>
 
