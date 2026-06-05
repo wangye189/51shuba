@@ -68,6 +68,23 @@ const SCHEMA = `
   );
   CREATE INDEX IF NOT EXISTS idx_shelf_user ON user_shelf(user_id, created_at DESC);
 
+  -- 频道（男生/女生…）与分类，改为可后台管理
+  CREATE TABLE IF NOT EXISTS channels (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    ckey       TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL,
+    sort       INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS categories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug       TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL,
+    channel    TEXT NOT NULL DEFAULT 'boy',
+    sort       INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   -- 后台管理员（与读者 users 表分离）；按铁律预留 TOTP 两步验证字段
   CREATE TABLE IF NOT EXISTS admins (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +103,31 @@ async function init(): Promise<Client> {
   await client.executeMultiple(SCHEMA);
   await seedIfEmpty(client);
   await seedAdmin(client);
+  await seedTaxonomy(client);
   return client;
+}
+
+// 首次把频道/分类灌入数据库（沿用原硬编码的男女频道 + 6 个分类）
+async function seedTaxonomy(client: Client): Promise<void> {
+  const ch = await client.execute("SELECT COUNT(*) AS n FROM channels");
+  if (Number(ch.rows[0].n) === 0) {
+    await client.execute({ sql: "INSERT INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["boy", "男生", 0] });
+    await client.execute({ sql: "INSERT INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["girl", "女生", 1] });
+  }
+  const ca = await client.execute("SELECT COUNT(*) AS n FROM categories");
+  if (Number(ca.rows[0].n) === 0) {
+    const seed: [string, string, string, number][] = [
+      ["xuanhuan", "玄幻", "boy", 0],
+      ["dushi", "都市", "boy", 1],
+      ["lishi", "历史", "boy", 2],
+      ["wuxia", "武侠", "boy", 3],
+      ["kehuan", "科幻", "boy", 4],
+      ["yanqing", "言情", "girl", 0],
+    ];
+    for (const [slug, name, channel, sort] of seed) {
+      await client.execute({ sql: "INSERT INTO categories (slug, name, channel, sort) VALUES (?, ?, ?, ?)", args: [slug, name, channel, sort] });
+    }
+  }
 }
 
 // 首次无管理员时创建默认管理员。
