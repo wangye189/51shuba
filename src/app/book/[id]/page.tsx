@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBook, listChapters, hotRanking, allBookIds } from "@/lib/repo";
+import { getBook, listChapters, hotRanking } from "@/lib/repo";
 import { coverUrl, site } from "@/lib/config";
 import { categoryNameOf, categoryChannelOf } from "@/lib/taxonomy";
 import AdSlot from "@/components/AdSlot";
@@ -13,8 +13,8 @@ import { bookJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 export const revalidate = 86400;
 
 export async function generateStaticParams() {
-  const books = await allBookIds();
-  return books.map((b) => ({ id: String(b.id) }));
+  // 书页按需渲染 + ISR 缓存，不在 build 时预生成（连云库逐本查章节太慢）
+  return [];
 }
 
 type Props = { params: Promise<{ id: string }> };
