@@ -50,11 +50,15 @@ export function categoryName(slug: string): string {
   return categories.find((c) => c.slug === slug)?.name || slug;
 }
 
-// 从采集来源拼 69shuba 的封面图 URL（cdn 有规律：前2位/全id/全id+s.jpg）
+// 从采集来源拼 69shuba 的封面图 URL
+// CDN 规律：image/{floor(id/1000)}/{id}/{id}s.jpg
+// 注意：必须用 floor(id/1000)，不能用 id.slice(0,2)——后者只在 5 位 id 时碰巧相等，
+// 3/4/6 位 id 会算错目录导致 404（例：id=105 应为 /0/105/，slice 会拼成 /10/105/）
 export function coverUrl(source?: string, cover?: string): string | null {
   if (cover) return cover;
   const m = (source || "").match(/^69shuba:(\d+)$/);
   if (!m) return null;
   const id = m[1];
-  return `https://cdn.cdnshu.com/files/article/image/${id.slice(0, 2)}/${id}/${id}s.jpg`;
+  const dir = Math.floor(Number(id) / 1000);
+  return `https://cdn.cdnshu.com/files/article/image/${dir}/${id}/${id}s.jpg`;
 }
