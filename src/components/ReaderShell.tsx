@@ -14,7 +14,7 @@ type Props = {
 };
 
 const THEMES = [
-  { key: "white", label: "白", bg: "#ffffff", fg: "#2b2b2b", bar: "#f7f7f7" },
+  { key: "white", label: "白", bg: "#ffffff", fg: "#191919", bar: "#f5f5f5" },
   { key: "sepia", label: "米黄", bg: "#f5ecd8", fg: "#5b4636", bar: "#efe4cb" },
   { key: "green", label: "护眼", bg: "#cfe8d4", fg: "#33433a", bar: "#c2dec8" },
   { key: "dark", label: "夜间", bg: "#1c1c1e", fg: "#a6a6a6", bar: "#252528" },
@@ -37,7 +37,7 @@ const toParas = (c: string) => c.split("\n\n").map((s) => s.trim()).filter(Boole
 
 export default function ReaderShell(p: Props) {
   const [fs, setFs] = useState(20);
-  const [lh, setLh] = useState(2.0);
+  const [lh, setLh] = useState(1.8);
   const [themeKey, setThemeKey] = useState("white");
   const [bright, setBright] = useState(0);
   const [bars, setBars] = useState(true);
@@ -57,7 +57,7 @@ export default function ReaderShell(p: Props) {
 
   useEffect(() => {
     setFs(Number(localStorage.getItem("rd_fs")) || 20);
-    setLh(Number(localStorage.getItem("rd_lh")) || 2.0);
+    setLh(Number(localStorage.getItem("rd_lh")) || 1.8);
     setThemeKey(localStorage.getItem("rd_theme") || "white");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
     try { setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").includes(p.bookId)); } catch {}
@@ -117,13 +117,22 @@ export default function ReaderShell(p: Props) {
     else if (y < lastY.current - 10) setBars(true);
     lastY.current = y;
     if (el.scrollHeight - el.scrollTop - el.clientHeight < 350) loadNext();
-    let cn = chaps[0]?.no, ct = chaps[0]?.title;
+    // 找出「当前正在看的那一章」（顶部越过标题栏的最后一章）
+    let cur = chaps[0];
     for (const c of chaps) {
       const s = secRefs.current[c.idx];
-      if (s && s.getBoundingClientRect().top <= 64) { cn = c.no; ct = c.title; }
+      if (s && s.getBoundingClientRect().top <= 64) cur = c;
     }
-    if (cn && cn !== curNo) { setCurNo(cn); setCurTitle(ct!); }
-  }, [chaps, curNo, loadNext]);
+    if (cur && cur.no !== curNo) {
+      setCurNo(cur.no);
+      setCurTitle(cur.title);
+      // 跟起点一样：滚到哪一章，浏览器地址栏 + 标题就同步成哪一章（刷新/分享/SEO 不丢位）
+      try {
+        history.replaceState(history.state, "", `/book/${p.bookId}/${cur.idx}`);
+        document.title = `${cur.title} - ${p.bookTitle}`;
+      } catch { /* ignore */ }
+    }
+  }, [chaps, curNo, loadNext, p.bookId, p.bookTitle]);
 
   // 下一章：滚到下一章开头（已加载则平滑滚动，否则先加载）
   const goNext = () => {
@@ -142,7 +151,7 @@ export default function ReaderShell(p: Props) {
     setBars((b) => !b);
   };
 
-  const opBtn = "flex flex-1 items-center justify-center gap-1 rounded-lg py-2.5 text-[13px]";
+  const opBtn = "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-3 text-[13px] font-medium";
   const icBtn = "flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[11px]";
   const last = chaps[chaps.length - 1];
 
@@ -154,17 +163,17 @@ export default function ReaderShell(p: Props) {
       {/* 顶栏 */}
       <header className="fixed inset-x-0 top-0 z-[70] flex h-12 items-center gap-2 px-3 transition-transform duration-200"
         style={{ background: theme.bar, borderBottom: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(-110%)" }}>
-        <Link href={`/book/${p.bookId}`} className="shrink-0 px-1 text-2xl leading-none" aria-label="返回">‹</Link>
-        <div className="min-w-0 flex-1 truncate text-[14px] font-medium">{curTitle}</div>
-        <span className="shrink-0 text-[12px] opacity-50">{curNo}/{p.total}</span>
-        <Link href={p.catalogHref} className="shrink-0 px-1 text-[13px]">目录</Link>
+        <Link href={`/book/${p.bookId}`} className="-ml-1 shrink-0 px-1" aria-label="返回"><Ic d={ICON.prev} /></Link>
+        <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{curTitle}</div>
+        <span className="shrink-0 text-[12px] tabular-nums opacity-50">{curNo}/{p.total}</span>
+        <Link href={p.catalogHref} className="shrink-0 px-1 text-[13px] opacity-80">目录</Link>
       </header>
 
       {/* 正文（多章连续）*/}
       <div onClick={onTapText} className="mx-auto max-w-2xl px-5 pb-36 pt-16">
         {chaps.map((c) => (
           <section key={c.idx} ref={(el) => { secRefs.current[c.idx] = el; }} className="min-h-[40vh] scroll-mt-14">
-            <h2 className="mb-5 mt-6 text-[19px] font-bold first:mt-0">{c.title}</h2>
+            <h2 className="mb-6 mt-7 text-[22px] font-medium first:mt-0">{c.title}</h2>
             <div style={{ fontSize: fs, lineHeight: lh }}>
               {toParas(c.content).map((t, i) => (
                 <p key={i} className="mb-4 indent-8" style={{ fontSize: fs, lineHeight: lh }}>{t}</p>
@@ -188,14 +197,14 @@ export default function ReaderShell(p: Props) {
         {/* 上层：上一章 / 加入书架 / 下一章 */}
         <div className="flex items-stretch gap-2 px-3 pb-1 pt-2">
           {p.prevHref
-            ? <Link href={p.prevHref} className={opBtn} style={{ border: `1px solid ${theme.fg}33` }}>上一章</Link>
-            : <span className={`${opBtn} opacity-30`} style={{ border: `1px solid ${theme.fg}33` }}>上一章</span>}
-          <button onClick={toggleFav} className={opBtn} style={{ border: `1px solid ${theme.fg}33`, color: faved ? "#b8001f" : "inherit" }}>
+            ? <Link href={p.prevHref} className={opBtn} style={{ background: `${theme.fg}0d` }}>上一章</Link>
+            : <span className={`${opBtn} opacity-30`} style={{ background: `${theme.fg}0d` }}>上一章</span>}
+          <button onClick={toggleFav} className={opBtn} style={{ background: `${theme.fg}0d`, color: faved ? "#b8001f" : "inherit" }}>
             <Ic d={ICON.star} fill={faved ? "#b8001f" : "none"} />{faved ? "已在书架" : "加入书架"}
           </button>
           {curHasNext
-            ? <button onClick={goNext} className={opBtn} style={{ background: "#b8001f", color: "#fff" }}>下一章</button>
-            : <span className={`${opBtn} opacity-40`} style={{ background: "#b8001f", color: "#fff" }}>已是最新</span>}
+            ? <button onClick={goNext} className={opBtn} style={{ background: `${theme.fg}0d` }}>下一章</button>
+            : <span className={`${opBtn} opacity-40`} style={{ background: `${theme.fg}0d` }}>已是最新</span>}
         </div>
         {/* 下层：目录 / 夜间 / 设置 */}
         <div className="flex items-stretch">
@@ -222,7 +231,7 @@ export default function ReaderShell(p: Props) {
         </div>
         <div className="mb-3 flex items-center gap-3">
           <span className="w-10 text-[12px] opacity-60">行距</span>
-          {([["紧", 1.6], ["适中", 2.0], ["松", 2.4]] as [string, number][]).map(([lab, v]) => (
+          {([["紧", 1.6], ["适中", 1.8], ["松", 2.2]] as [string, number][]).map(([lab, v]) => (
             <button key={lab} onClick={() => setLine(v)} className="h-9 flex-1 rounded-lg border text-[13px]"
               style={{ borderColor: theme.fg + "33", background: lh === v ? "#b8001f" : "transparent", color: lh === v ? "#fff" : theme.fg }}>{lab}</button>
           ))}
