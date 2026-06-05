@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserShelf, addToShelf, removeFromShelf } from "@/lib/repo";
 import { coverUrl } from "@/lib/config";
+import { getCategories } from "@/lib/taxonomy";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "未登录" }, { status: 401 });
-  const books = await getUserShelf(user.id);
+  const [books, cats] = await Promise.all([getUserShelf(user.id), getCategories()]);
+  const chOf = (slug: string) => cats.find((c) => c.slug === slug)?.channel || "boy";
   return NextResponse.json({
     books: books.map((b) => ({
       id: b.id,
@@ -17,6 +19,7 @@ export async function GET() {
       cover: coverUrl(b.source, b.cover),
       last_idx: b.last_idx,
       last_title: b.last_title,
+      channel: chOf(b.category),
     })),
   });
 }

@@ -11,6 +11,7 @@ type Props = {
   prevHref: string | null;
   catalogHref: string;
   initial: Chap;
+  channel?: string;
 };
 
 const THEMES = [
@@ -109,10 +110,10 @@ export default function ReaderShell(p: Props) {
       return;
     }
     // 游客：写本地书架
-    let s: { id: number; title: string }[] = [];
+    let s: { id: number; title: string; channel?: string }[] = [];
     try { s = JSON.parse(localStorage.getItem("shelf") || "[]").filter((x: { id: number }) => x?.id != null); } catch {}
     const i = s.findIndex((x) => x.id === p.bookId);
-    if (i >= 0) s.splice(i, 1); else s.unshift({ id: p.bookId, title: p.bookTitle });
+    if (i >= 0) s.splice(i, 1); else s.unshift({ id: p.bookId, title: p.bookTitle, channel: p.channel || "boy" });
     localStorage.setItem("shelf", JSON.stringify(s));
     setFaved(i < 0);
   };

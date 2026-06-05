@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBook, getChapter, listChapters, allChapterParams } from "@/lib/repo";
 import { site } from "@/lib/config";
-import { categoryNameOf } from "@/lib/taxonomy";
+import { categoryNameOf, categoryChannelOf } from "@/lib/taxonomy";
 import JsonLd from "@/components/JsonLd";
 import ViewBeacon from "@/components/ViewBeacon";
 import ReaderShell from "@/components/ReaderShell";
@@ -44,6 +44,7 @@ export default async function ChapterPage({ params }: Props) {
   // 按「实际存在的章节列表」算上/下章，避免残缺章节导致点下一章 404
   const chapters = await listChapters(bookId);
   const catName = await categoryNameOf(book.category);
+  const catChannel = await categoryChannelOf(book.category);
   const pos = chapters.findIndex((c) => c.idx === idx);
   const total = chapters.length;
   const prevIdx = pos > 0 ? chapters[pos - 1].idx : null;
@@ -68,6 +69,7 @@ export default async function ChapterPage({ params }: Props) {
         prevHref={prevIdx ? `/book/${bookId}/${prevIdx}` : null}
         catalogHref={`/book/${bookId}`}
         initial={{ idx, no: curNo, title: chap.title, content: chap.content, nextIdx }}
+        channel={catChannel}
       />
     </>
   );

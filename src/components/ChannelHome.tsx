@@ -33,7 +33,7 @@ export default async function ChannelHome({ channel }: { channel: Channel }) {
       <section className="panel p-3">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="border-l-4 border-[var(--accent)] pl-2 text-[15px] font-bold">精品推荐</h2>
-          <Link href="/rank" className="text-[12px] text-[var(--muted)]">更多 ›</Link>
+          <Link href={channel === "boy" ? "/rank" : `/${channel}/rank`} className="text-[12px] text-[var(--muted)]">更多 ›</Link>
         </div>
         {feat.length === 0 ? (
           <p className="py-6 text-center text-[13px] text-[var(--muted)]">该频道暂无书籍。</p>

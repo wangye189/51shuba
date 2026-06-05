@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBook, listChapters, hotRanking, allBookIds } from "@/lib/repo";
 import { coverUrl, site } from "@/lib/config";
-import { categoryNameOf } from "@/lib/taxonomy";
+import { categoryNameOf, categoryChannelOf } from "@/lib/taxonomy";
 import AdSlot from "@/components/AdSlot";
+import AddToShelfButton from "@/components/AddToShelfButton";
 import Cover from "@/components/Cover";
 import JsonLd from "@/components/JsonLd";
 import { bookJsonLd, breadcrumbJsonLd } from "@/lib/seo";
@@ -39,6 +40,7 @@ export default async function BookPage({ params }: Props) {
 
   const [chapters, hot] = await Promise.all([listChapters(book.id), hotRanking(10)]);
   const catName = await categoryNameOf(book.category);
+  const catChannel = await categoryChannelOf(book.category);
   const firstIdx = chapters[0]?.idx;
   const lastIdx = chapters[chapters.length - 1]?.idx;
 
@@ -68,12 +70,15 @@ export default async function BookPage({ params }: Props) {
               <p>{catName} · {book.status} · {chapters.length} 章</p>
               <p>{(book.views / 10000).toFixed(1)}万点击</p>
             </div>
-            {chapters.length > 0 && (
-              <div className="mt-3 flex gap-2">
-                <Link href={`/book/${book.id}/${firstIdx}`} className="flex-1 rounded-lg bg-[var(--accent)] py-2.5 text-center text-[14px] font-medium text-white active:opacity-80">开始阅读</Link>
-                <Link href={`/book/${book.id}/${lastIdx}`} className="flex-1 rounded-lg border border-[var(--border)] py-2.5 text-center text-[14px] text-[#555] active:border-[var(--accent)]">读最新</Link>
-              </div>
-            )}
+            <div className="mt-3 flex gap-2">
+              {chapters.length > 0 && (
+                <>
+                  <Link href={`/book/${book.id}/${firstIdx}`} className="flex-1 rounded-lg bg-[var(--accent)] py-2.5 text-center text-[14px] font-medium text-white active:opacity-80">开始阅读</Link>
+                  <Link href={`/book/${book.id}/${lastIdx}`} className="flex-1 rounded-lg border border-[var(--border)] py-2.5 text-center text-[14px] text-[#555] active:border-[var(--accent)]">读最新</Link>
+                </>
+              )}
+              <AddToShelfButton bookId={book.id} bookTitle={book.title} channel={catChannel} />
+            </div>
           </div>
         </div>
         <div className="mt-4 border-t border-dashed border-[#eee] pt-3">

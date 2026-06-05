@@ -6,6 +6,7 @@ import Analytics from "@/components/Analytics";
 import RefTracker from "@/components/RefTracker";
 import AuthNav from "@/components/AuthNav";
 import ChannelNav from "@/components/ChannelNav";
+import ChannelSwitch from "@/components/ChannelSwitch";
 import { getChannels, getCategories } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
@@ -39,7 +40,11 @@ export default async function RootLayout({
         {/* 顶部细条 */}
         <div className="site-bar border-b border-[var(--border)] bg-white text-xs text-[var(--muted)]">
           <div className="mx-auto flex max-w-[1000px] items-center justify-between px-3 py-1.5">
-            <span>{site.slogan}</span>
+            <span className="flex items-center gap-2">
+              <ChannelSwitch channels={channels} />
+              <span className="hidden text-gray-300 sm:inline">|</span>
+              <span className="hidden sm:inline">{site.slogan}</span>
+            </span>
             <span className="flex items-center gap-3">
               <AuthNav />
               <Link href="/shelf" className="hover:text-[var(--accent)]">我的书架</Link>
