@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { categories, type Channel } from "./config";
 
 export type Book = {
   id: number;
@@ -102,16 +103,26 @@ async function rows(sql: string, args: (string | number)[] = []): Promise<BookRo
   return r.rows as unknown as BookRow[];
 }
 
-export function latestUpdated(limit = 15): Promise<BookRow[]> {
-  return rows(`${ROW_SELECT} ORDER BY b.updated_at DESC, b.id DESC LIMIT ?`, [limit]);
+// 按频道（男生/女生）拼 WHERE：用频道下的分类做 category IN (...)
+function channelWhere(channel?: Channel): { sql: string; args: string[] } {
+  if (!channel) return { sql: "", args: [] };
+  const cats = categories.filter((c) => c.channel === channel).map((c) => c.slug);
+  if (!cats.length) return { sql: "", args: [] };
+  return { sql: ` WHERE b.category IN (${cats.map(() => "?").join(",")})`, args: cats };
 }
 
-export function hotRanking(limit = 10): Promise<BookRow[]> {
-  return rows(`${ROW_SELECT} ORDER BY b.views DESC, b.id DESC LIMIT ?`, [limit]);
+export function latestUpdated(limit = 15, channel?: Channel): Promise<BookRow[]> {
+  const w = channelWhere(channel);
+  return rows(`${ROW_SELECT}${w.sql} ORDER BY b.updated_at DESC, b.id DESC LIMIT ?`, [...w.args, limit]);
 }
 
-export function featured(limit = 6): Promise<BookRow[]> {
-  return hotRanking(limit);
+export function hotRanking(limit = 10, channel?: Channel): Promise<BookRow[]> {
+  const w = channelWhere(channel);
+  return rows(`${ROW_SELECT}${w.sql} ORDER BY b.views DESC, b.id DESC LIMIT ?`, [...w.args, limit]);
+}
+
+export function featured(limit = 6, channel?: Channel): Promise<BookRow[]> {
+  return hotRanking(limit, channel);
 }
 
 export function relatedBooks(category: string, excludeId: number, limit = 8): Promise<BookRow[]> {

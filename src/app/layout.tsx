@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { site, categories } from "@/lib/config";
+import { site } from "@/lib/config";
 import Analytics from "@/components/Analytics";
 import RefTracker from "@/components/RefTracker";
 import AuthNav from "@/components/AuthNav";
+import ChannelNav from "@/components/ChannelNav";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -70,32 +71,8 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* 深色分类导航条 */}
-        <nav className="bg-[var(--nav-bg)] text-white">
-          <div className="mx-auto flex max-w-[1000px] flex-wrap items-center px-2 text-sm">
-            <Link href="/" className="px-4 py-2.5 font-bold hover:bg-black/30">
-              首页
-            </Link>
-            {categories.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/category/${c.slug}`}
-                className="px-4 py-2.5 hover:bg-black/30"
-              >
-                {c.name}
-              </Link>
-            ))}
-            <Link href="/rank" className="px-4 py-2.5 hover:bg-black/30">
-              排行榜
-            </Link>
-            <Link href="/complete" className="px-4 py-2.5 hover:bg-black/30">
-              完本
-            </Link>
-            <Link href="/shelf" className="px-4 py-2.5 hover:bg-black/30">
-              书架
-            </Link>
-          </div>
-        </nav>
+        {/* 深色分类导航条（男生/女生频道）*/}
+        <ChannelNav />
 
         <main className="mx-auto w-full max-w-[1000px] flex-1 px-3 py-4">
           {children}

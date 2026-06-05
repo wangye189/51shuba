@@ -37,17 +37,32 @@ export const analytics = {
   adsId: process.env.NEXT_PUBLIC_GADS_ID || "",
 };
 
-export const categories = [
-  { slug: "xuanhuan", name: "玄幻" },
-  { slug: "dushi", name: "都市" },
-  { slug: "yanqing", name: "言情" },
-  { slug: "lishi", name: "历史" },
-  { slug: "wuxia", name: "武侠" },
-  { slug: "kehuan", name: "科幻" },
+export type Channel = "boy" | "girl";
+
+export const channels: { key: Channel; name: string }[] = [
+  { key: "boy", name: "男生" },
+  { key: "girl", name: "女生" },
+];
+
+export const categories: { slug: string; name: string; channel: Channel }[] = [
+  { slug: "xuanhuan", name: "玄幻", channel: "boy" },
+  { slug: "dushi", name: "都市", channel: "boy" },
+  { slug: "lishi", name: "历史", channel: "boy" },
+  { slug: "wuxia", name: "武侠", channel: "boy" },
+  { slug: "kehuan", name: "科幻", channel: "boy" },
+  { slug: "yanqing", name: "言情", channel: "girl" },
 ];
 
 export function categoryName(slug: string): string {
   return categories.find((c) => c.slug === slug)?.name || slug;
+}
+
+export function categoryChannel(slug: string): Channel {
+  return categories.find((c) => c.slug === slug)?.channel || "boy";
+}
+
+export function channelCategories(ch: Channel) {
+  return categories.filter((c) => c.channel === ch);
 }
 
 // 从采集来源拼 69shuba 的封面图 URL
