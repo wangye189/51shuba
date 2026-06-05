@@ -24,12 +24,14 @@ const FS_MIN = 15, FS_MAX = 30;
 const ICON = {
   list: "M4 6h16M4 12h16M4 18h16",
   prev: "M15 5l-7 7 7 7",
+  next: "M9 5l7 7-7 7",
   moon: "M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z",
   sun: "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4",
   settings: "M3 14v-4M3 7V3M12 14V8M12 5V3M21 14v-4M21 7V3M1 10h4M10 8h4M19 10h4",
+  star: "M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3 6.2 20.4l1.1-6.5L2.6 9.3l6.5-.9z",
 };
-const Ic = ({ d }: { d: string }) => (
-  <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+const Ic = ({ d, fill = "none" }: { d: string; fill?: string }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 );
 const toParas = (c: string) => c.split("\n\n").map((s) => s.trim()).filter(Boolean);
 
@@ -40,6 +42,8 @@ export default function ReaderShell(p: Props) {
   const [bright, setBright] = useState(0);
   const [bars, setBars] = useState(true);
   const [panel, setPanel] = useState(false);
+  const [faved, setFaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [chaps, setChaps] = useState<Chap[]>([p.initial]);
   const [curNo, setCurNo] = useState(p.initial.no);
@@ -55,13 +59,14 @@ export default function ReaderShell(p: Props) {
     setLh(Number(localStorage.getItem("rd_lh")) || 2.0);
     setThemeKey(localStorage.getItem("rd_theme") || "white");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
+    try { setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").includes(p.bookId)); } catch {}
     document.documentElement.classList.add("reader-mode");
     return () => {
       document.documentElement.classList.remove("reader-mode");
       const m = document.querySelector('meta[name="theme-color"]');
       if (m) m.setAttribute("content", "#ffffff");
     };
-  }, []);
+  }, [p.bookId]);
 
   useEffect(() => {
     let m = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
@@ -75,28 +80,37 @@ export default function ReaderShell(p: Props) {
   const setTheme = (k: string) => { setThemeKey(k); save("rd_theme", k); };
   const setBrightness = (v: number) => { setBright(v); save("rd_bright", v); };
   const toggleNight = () => setTheme(themeKey === "dark" ? "white" : "dark");
+  const toggleFav = () => {
+    let s: number[] = [];
+    try { s = JSON.parse(localStorage.getItem("shelf") || "[]"); } catch {}
+    const i = s.indexOf(p.bookId);
+    if (i >= 0) s.splice(i, 1); else s.push(p.bookId);
+    localStorage.setItem("shelf", JSON.stringify(s));
+    setFaved(i < 0);
+  };
 
-  // 无缝续载下一章
   const loadNext = useCallback(async () => {
     if (loadingRef.current) return;
     const last = chaps[chaps.length - 1];
     if (!last || last.nextIdx == null) return;
     loadingRef.current = true;
+    setLoading(true);
     try {
-      const r = await fetch(`/api/chapter/${p.bookId}/${last.nextIdx}`);
-      if (r.ok) {
-        const c = (await r.json()) as Chap | null;
-        if (c && c.content) setChaps((prev) => (prev.some((x) => x.idx === c.idx) ? prev : [...prev, c]));
-      }
-    } catch { /* 忽略 */ }
+      // 让"加载中"动画至少闪一下，给用户翻章的感知（CDN 静态 JSON 通常很快）
+      const [c] = await Promise.all([
+        fetch(`/api/chapter/${p.bookId}/${last.nextIdx}`).then((r) => (r.ok ? r.json() : null)) as Promise<Chap | null>,
+        new Promise((res) => setTimeout(res, 350)),
+      ]);
+      if (c && c.content) setChaps((prev) => (prev.some((x) => x.idx === c.idx) ? prev : [...prev, c]));
+    } catch { /* ignore */ }
     loadingRef.current = false;
+    setLoading(false);
   }, [chaps, p.bookId]);
 
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 1500) loadNext();
-    // 顶栏跟随当前章
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 350) loadNext();
     let cn = chaps[0]?.no, ct = chaps[0]?.title;
     for (const c of chaps) {
       const s = secRefs.current[c.idx];
@@ -105,13 +119,25 @@ export default function ReaderShell(p: Props) {
     if (cn && cn !== curNo) { setCurNo(cn); setCurTitle(ct!); }
   }, [chaps, curNo, loadNext]);
 
+  // 下一章：滚到下一章开头（已加载则平滑滚动，否则先加载）
+  const goNext = () => {
+    const cur = chaps.find((c) => c.no === curNo) || chaps[chaps.length - 1];
+    const ni = cur?.nextIdx;
+    if (ni == null) return;
+    const el = secRefs.current[ni];
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+    else loadNext().then(() => setTimeout(() => secRefs.current[ni]?.scrollIntoView({ behavior: "smooth" }), 400));
+  };
+  const curHasNext = (chaps.find((c) => c.no === curNo) || chaps[chaps.length - 1])?.nextIdx != null;
+
   const onTapText = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("a,button,input")) return;
     if (panel) { setPanel(false); return; }
     setBars((b) => !b);
   };
 
-  const item = "flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px]";
+  const opBtn = "flex flex-1 items-center justify-center gap-1 rounded-lg py-2.5 text-[13px]";
+  const icBtn = "flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[11px]";
   const last = chaps[chaps.length - 1];
 
   return (
@@ -129,9 +155,9 @@ export default function ReaderShell(p: Props) {
       </header>
 
       {/* 正文（多章连续）*/}
-      <div onClick={onTapText} className="mx-auto max-w-2xl px-5 pb-28 pt-16">
+      <div onClick={onTapText} className="mx-auto max-w-2xl px-5 pb-36 pt-16">
         {chaps.map((c) => (
-          <section key={c.idx} ref={(el) => { secRefs.current[c.idx] = el; }} className="min-h-[40vh]">
+          <section key={c.idx} ref={(el) => { secRefs.current[c.idx] = el; }} className="min-h-[40vh] scroll-mt-14">
             <h2 className="mb-5 mt-6 text-[19px] font-bold first:mt-0">{c.title}</h2>
             <div style={{ fontSize: fs, lineHeight: lh }}>
               {toParas(c.content).map((t, i) => (
@@ -140,25 +166,42 @@ export default function ReaderShell(p: Props) {
             </div>
           </section>
         ))}
-        <div className="py-8 text-center text-[13px] opacity-50">
-          {loadingRef.current ? "加载下一章…" : last?.nextIdx == null ? "—— 已是最新章节 ——" : "下拉继续阅读"}
+        <div className="flex items-center justify-center gap-2 py-10 text-center text-[13px] opacity-60">
+          {loading ? (
+            <>
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              正在加载下一章…
+            </>
+          ) : last?.nextIdx == null ? "—— 已读到最新章节 ——" : "上滑，加载下一章"}
         </div>
       </div>
 
-      {/* 底栏：图标工具栏 */}
-      <nav className="fixed inset-x-0 bottom-0 z-[70] flex h-16 items-stretch transition-transform duration-200"
-        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(110%)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <Link href={p.catalogHref} className={item}><Ic d={ICON.list} />目录</Link>
-        {p.prevHref
-          ? <Link href={p.prevHref} className={item}><Ic d={ICON.prev} />上一章</Link>
-          : <span className={`${item} opacity-30`}><Ic d={ICON.prev} />上一章</span>}
-        <button onClick={toggleNight} className={item}><Ic d={themeKey === "dark" ? ICON.sun : ICON.moon} />{themeKey === "dark" ? "日间" : "夜间"}</button>
-        <button onClick={() => { setPanel((v) => !v); setBars(true); }} className={item}><Ic d={ICON.settings} />设置</button>
-      </nav>
+      {/* 底部菜单：两层（上=操作，下=图标工具）*/}
+      <div className="fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200"
+        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(120%)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {/* 上层：上一章 / 加入书架 / 下一章 */}
+        <div className="flex items-stretch gap-2 px-3 pb-1 pt-2">
+          {p.prevHref
+            ? <Link href={p.prevHref} className={opBtn} style={{ border: `1px solid ${theme.fg}33` }}>上一章</Link>
+            : <span className={`${opBtn} opacity-30`} style={{ border: `1px solid ${theme.fg}33` }}>上一章</span>}
+          <button onClick={toggleFav} className={opBtn} style={{ border: `1px solid ${theme.fg}33`, color: faved ? "#b8001f" : "inherit" }}>
+            <Ic d={ICON.star} fill={faved ? "#b8001f" : "none"} />{faved ? "已在书架" : "加入书架"}
+          </button>
+          {curHasNext
+            ? <button onClick={goNext} className={opBtn} style={{ background: "#b8001f", color: "#fff" }}>下一章</button>
+            : <span className={`${opBtn} opacity-40`} style={{ background: "#b8001f", color: "#fff" }}>已是最新</span>}
+        </div>
+        {/* 下层：目录 / 夜间 / 设置 */}
+        <div className="flex items-stretch">
+          <Link href={p.catalogHref} className={icBtn}><Ic d={ICON.list} />目录</Link>
+          <button onClick={toggleNight} className={icBtn}><Ic d={themeKey === "dark" ? ICON.sun : ICON.moon} />{themeKey === "dark" ? "日间" : "夜间"}</button>
+          <button onClick={() => { setPanel((v) => !v); setBars(true); }} className={icBtn}><Ic d={ICON.settings} />设置</button>
+        </div>
+      </div>
 
       {/* 设置抽屉 */}
-      <div className="fixed inset-x-0 bottom-16 z-[75] px-4 py-4 transition-transform duration-200"
-        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: panel ? "translateY(0)" : "translateY(130%)", boxShadow: "0 -8px 24px rgba(0,0,0,.18)" }}>
+      <div className="fixed inset-x-0 bottom-[7.5rem] z-[75] px-4 py-4 transition-transform duration-200"
+        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: panel ? "translateY(0)" : "translateY(160%)", boxShadow: "0 -8px 24px rgba(0,0,0,.18)" }}>
         <div className="mb-3 flex items-center gap-3">
           <span className="w-10 text-[12px] opacity-60">亮度</span>
           <span className="text-[11px]">☀</span>
