@@ -39,7 +39,7 @@ const toParas = (c: string) => c.split("\n\n").map((s) => s.trim()).filter(Boole
 export default function ReaderShell(p: Props) {
   const [fs, setFs] = useState(20);
   const [lh, setLh] = useState(1.8);
-  const [themeKey, setThemeKey] = useState("white");
+  const [themeKey, setThemeKey] = useState("sepia");
   const [bright, setBright] = useState(0);
   const [bars, setBars] = useState(true);
   const [panel, setPanel] = useState(false);
@@ -60,7 +60,7 @@ export default function ReaderShell(p: Props) {
   useEffect(() => {
     setFs(Number(localStorage.getItem("rd_fs")) || 20);
     setLh(Number(localStorage.getItem("rd_lh")) || 1.8);
-    setThemeKey(localStorage.getItem("rd_theme") || "white");
+    setThemeKey(localStorage.getItem("rd_theme") || "sepia");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
     // 登录则查账号书架是否已收藏，否则查本地
     (async () => {
@@ -86,8 +86,8 @@ export default function ReaderShell(p: Props) {
   useEffect(() => {
     let m = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
-    m.setAttribute("content", theme.bar);
-  }, [theme.bar]);
+    m.setAttribute("content", theme.bg);
+  }, [theme.bg]);
 
   const save = (k: string, v: string | number) => localStorage.setItem(k, String(v));
   const setFontSize = (v: number) => { v = Math.min(FS_MAX, Math.max(FS_MIN, v)); setFs(v); save("rd_fs", v); };
@@ -190,11 +190,10 @@ export default function ReaderShell(p: Props) {
 
       {/* 顶栏 */}
       <header className="fixed inset-x-0 top-0 z-[70] flex h-12 items-center gap-2 px-3 transition-transform duration-200"
-        style={{ background: theme.bar, borderBottom: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(-110%)" }}>
+        style={{ background: theme.bg, borderBottom: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(-110%)" }}>
         <Link href={`/book/${p.bookId}`} className="-ml-1 shrink-0 px-1" aria-label="返回"><Ic d={ICON.prev} /></Link>
         <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{curTitle}</div>
         <span className="shrink-0 text-[12px] tabular-nums opacity-50">{curNo}/{p.total}</span>
-        <Link href={p.catalogHref} className="shrink-0 px-1 text-[13px] opacity-80">目录</Link>
       </header>
 
       {/* 正文（多章连续）*/}
@@ -221,7 +220,7 @@ export default function ReaderShell(p: Props) {
 
       {/* 底部菜单：两层（上=操作，下=图标工具）*/}
       <div className="fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200"
-        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(120%)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+        style={{ background: theme.bg, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(120%)", paddingBottom: "env(safe-area-inset-bottom)" }}>
         {/* 上层：上一章 / 加入书架 / 下一章 */}
         <div className="flex items-stretch gap-2 px-3 pb-1 pt-2">
           {p.prevHref
@@ -244,7 +243,7 @@ export default function ReaderShell(p: Props) {
 
       {/* 设置抽屉 */}
       <div className="fixed inset-x-0 bottom-[7.5rem] z-[75] px-4 py-4 transition-transform duration-200"
-        style={{ background: theme.bar, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: panel ? "translateY(0)" : "translateY(160%)", boxShadow: "0 -8px 24px rgba(0,0,0,.18)" }}>
+        style={{ background: theme.bg, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: panel ? "translateY(0)" : "translateY(160%)", boxShadow: "0 -8px 24px rgba(0,0,0,.18)" }}>
         <div className="mb-3 flex items-center gap-3">
           <span className="w-10 text-[12px] opacity-60">亮度</span>
           <span className="text-[11px]">☀</span>
