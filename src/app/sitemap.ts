@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { allBookIds, listChapters } from "@/lib/repo";
+import { allBookIds } from "@/lib/repo";
 import { site } from "@/lib/config";
 import { getCategories, getChannels } from "@/lib/taxonomy";
 
@@ -31,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
+  // 只列书页（章节让 Google 通过书详情页内链爬，避免上万 URL 拖垮 sitemap）
   const books = await allBookIds();
   for (const b of books) {
     entries.push({
@@ -39,14 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     });
-    const chs = await listChapters(b.id);
-    for (const ch of chs) {
-      entries.push({
-        url: `${base}/book/${b.id}/${ch.idx}`,
-        changeFrequency: "monthly",
-        priority: 0.5,
-      });
-    }
   }
   return entries;
 }
