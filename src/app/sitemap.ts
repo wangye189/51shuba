@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
 import { allBookIds, listChapters } from "@/lib/repo";
-import { categories, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { getCategories } from "@/lib/taxonomy";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
+  const categories = await getCategories();
   const entries: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: "daily", priority: 1 },
     ...categories.map((c) => ({

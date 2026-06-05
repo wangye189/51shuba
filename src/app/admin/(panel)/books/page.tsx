@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { adminListBooks } from "@/lib/repo";
-import { categoryName } from "@/lib/config";
+import { getCategories } from "@/lib/taxonomy";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminBooks() {
-  const books = await adminListBooks(100);
+  const [books, cats] = await Promise.all([adminListBooks(100), getCategories()]);
+  const catName = (slug: string) => cats.find((c) => c.slug === slug)?.name || slug;
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -36,7 +37,7 @@ export default async function AdminBooks() {
                     <Link href={`/book/${b.id}`} target="_blank" className="hover:text-[#c0392b]">{b.title}</Link>
                   </td>
                   <td className="px-3 py-2.5 text-gray-600">{b.author}</td>
-                  <td className="px-3 py-2.5 text-gray-600">{categoryName(b.category)}</td>
+                  <td className="px-3 py-2.5 text-gray-600">{catName(b.category)}</td>
                   <td className="px-3 py-2.5 text-center">{b.chap_count}</td>
                   <td className="px-3 py-2.5 text-center">{b.views}</td>
                   <td className="px-3 py-2.5 text-gray-500">{b.status}</td>

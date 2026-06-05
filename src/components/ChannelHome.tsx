@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { latestUpdated, hotRanking, featured } from "@/lib/repo";
-import { channelCategories, categoryName, coverUrl, site, type Channel } from "@/lib/config";
+import { coverUrl, site, type Channel } from "@/lib/config";
+import { getCategoriesByChannel, getCategories } from "@/lib/taxonomy";
 import AdSlot from "@/components/AdSlot";
 import Cover from "@/components/Cover";
 
 export default async function ChannelHome({ channel }: { channel: Channel }) {
-  const [feat, latest, hot] = await Promise.all([
+  const [feat, latest, hot, cats, allCats] = await Promise.all([
     featured(8, channel),
     latestUpdated(12, channel),
     hotRanking(10, channel),
+    getCategoriesByChannel(channel),
+    getCategories(),
   ]);
-  const cats = channelCategories(channel);
+  const catName = (slug: string) => allCats.find((c) => c.slug === slug)?.name || slug;
 
   return (
     <div className="space-y-4">
@@ -60,7 +63,7 @@ export default async function ChannelHome({ channel }: { channel: Channel }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-[15px] font-medium text-[#222]">{b.title}</span>
-                    <span className="shrink-0 text-[11px] text-[var(--muted)]">[{categoryName(b.category)}]</span>
+                    <span className="shrink-0 text-[11px] text-[var(--muted)]">[{catName(b.category)}]</span>
                   </div>
                   <p className="mt-0.5 text-[12px] text-[var(--muted)]">{b.author} · {b.status}</p>
                   <p className="mt-1 truncate text-[12px] text-[#666]">最新：{b.last_title || "—"}</p>
@@ -84,7 +87,7 @@ export default async function ChannelHome({ channel }: { channel: Channel }) {
                 <Cover src={coverUrl(b.source, b.cover)} title={b.title} className="h-14 w-11 shrink-0 rounded" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-medium">{b.title}</p>
-                  <p className="truncate text-[12px] text-[var(--muted)]">{b.author} · {categoryName(b.category)}</p>
+                  <p className="truncate text-[12px] text-[var(--muted)]">{b.author} · {catName(b.category)}</p>
                 </div>
                 <span className="shrink-0 text-[12px] text-[var(--accent)]">{(b.views / 10000).toFixed(1)}万</span>
               </Link>

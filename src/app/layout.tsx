@@ -6,6 +6,7 @@ import Analytics from "@/components/Analytics";
 import RefTracker from "@/components/RefTracker";
 import AuthNav from "@/components/AuthNav";
 import ChannelNav from "@/components/ChannelNav";
+import { getChannels, getCategories } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -28,9 +29,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const [channels, categories] = await Promise.all([getChannels(), getCategories()]);
   return (
     <html lang="zh-CN">
       <body className="min-h-screen flex flex-col">
@@ -72,7 +74,7 @@ export default function RootLayout({
         </header>
 
         {/* 深色分类导航条（男生/女生频道）*/}
-        <ChannelNav />
+        <ChannelNav channels={channels} categories={categories} />
 
         <main className="mx-auto w-full max-w-[1000px] flex-1 px-3 py-4">
           {children}

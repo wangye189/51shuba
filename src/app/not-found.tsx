@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categories } from "@/lib/config";
+import { getCategories } from "@/lib/taxonomy";
 import { hotRanking } from "@/lib/repo";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +7,12 @@ export const dynamic = "force-dynamic";
 export default async function NotFound() {
   // 注意：此处仅取热门书做引导内链
   let hot: { id: number; title: string }[] = [];
+  let categories: { slug: string; name: string }[] = [];
   try {
-    hot = (await hotRanking(8)).map((b) => ({ id: b.id, title: b.title }));
+    [hot, categories] = await Promise.all([
+      hotRanking(8).then((rows) => rows.map((b) => ({ id: b.id, title: b.title }))),
+      getCategories(),
+    ]);
   } catch {
     hot = [];
   }

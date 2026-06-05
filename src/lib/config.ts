@@ -37,33 +37,9 @@ export const analytics = {
   adsId: process.env.NEXT_PUBLIC_GADS_ID || "",
 };
 
-export type Channel = "boy" | "girl";
-
-export const channels: { key: Channel; name: string }[] = [
-  { key: "boy", name: "男生" },
-  { key: "girl", name: "女生" },
-];
-
-export const categories: { slug: string; name: string; channel: Channel }[] = [
-  { slug: "xuanhuan", name: "玄幻", channel: "boy" },
-  { slug: "dushi", name: "都市", channel: "boy" },
-  { slug: "lishi", name: "历史", channel: "boy" },
-  { slug: "wuxia", name: "武侠", channel: "boy" },
-  { slug: "kehuan", name: "科幻", channel: "boy" },
-  { slug: "yanqing", name: "言情", channel: "girl" },
-];
-
-export function categoryName(slug: string): string {
-  return categories.find((c) => c.slug === slug)?.name || slug;
-}
-
-export function categoryChannel(slug: string): Channel {
-  return categories.find((c) => c.slug === slug)?.channel || "boy";
-}
-
-export function channelCategories(ch: Channel) {
-  return categories.filter((c) => c.channel === ch);
-}
+// 频道/分类已改为数据库驱动（见 lib/taxonomy.ts）。
+// 频道 key 现为动态字符串。
+export type Channel = string;
 
 // 从采集来源拼 69shuba 的封面图 URL
 // CDN 规律：image/{floor(id/1000)}/{id}/{id}s.jpg

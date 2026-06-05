@@ -1,14 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { hotRanking } from "@/lib/repo";
-import { categoryName } from "@/lib/config";
+import { getCategories } from "@/lib/taxonomy";
 import AdSlot from "@/components/AdSlot";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "点击排行榜" };
 
 export default async function RankPage() {
-  const list = await hotRanking(50);
+  const [list, cats] = await Promise.all([hotRanking(50), getCategories()]);
+  const catName = (slug: string) => cats.find((c) => c.slug === slug)?.name || slug;
   return (
     <div className="space-y-3">
       <AdSlot place="homeTop" />
@@ -32,7 +33,7 @@ export default async function RankPage() {
                 href={`/category/${b.category}`}
                 className="w-14 text-[12px] text-[var(--link)] hover:text-[var(--accent)]"
               >
-                [{categoryName(b.category)}]
+                [{catName(b.category)}]
               </Link>
               <span className="flex-1 truncate text-[12px] text-[#777]">
                 {b.last_title || "—"}

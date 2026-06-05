@@ -1,4 +1,4 @@
-import { site, categoryName } from "./config";
+import { site } from "./config";
 import type { Book } from "./repo";
 
 const abs = (path: string) => `${site.url}${path}`;
@@ -23,13 +23,13 @@ export function websiteJsonLd() {
 }
 
 /** 书详情：Book schema */
-export function bookJsonLd(book: Book, chapterCount: number) {
+export function bookJsonLd(book: Book, chapterCount: number, genre: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Book",
     name: book.title,
     author: { "@type": "Person", name: book.author },
-    genre: categoryName(book.category),
+    genre,
     inLanguage: "zh-CN",
     bookFormat: "https://schema.org/EBook",
     numberOfPages: chapterCount,

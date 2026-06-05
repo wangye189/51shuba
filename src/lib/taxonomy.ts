@@ -36,3 +36,39 @@ export async function channelSlugs(channel: string): Promise<string[]> {
 export async function isValidCategory(slug: string): Promise<boolean> {
   return (await getCategories()).some((c) => c.slug === slug);
 }
+
+// ===== 后台管理：写操作 =====
+export async function createCategory(slug: string, name: string, channel: string, sort = 0) {
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO categories (slug, name, channel, sort) VALUES (?, ?, ?, ?)",
+    args: [slug, name, channel, sort],
+  });
+}
+export async function updateCategory(id: number, name: string, channel: string, sort: number) {
+  const db = await getDb();
+  await db.execute({
+    sql: "UPDATE categories SET name = ?, channel = ?, sort = ? WHERE id = ?",
+    args: [name, channel, sort, id],
+  });
+}
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  await db.execute({ sql: "DELETE FROM categories WHERE id = ?", args: [id] });
+}
+
+export async function createChannel(ckey: string, name: string, sort = 0) {
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO channels (ckey, name, sort) VALUES (?, ?, ?)",
+    args: [ckey, name, sort],
+  });
+}
+export async function updateChannel(ckey: string, name: string, sort: number) {
+  const db = await getDb();
+  await db.execute({ sql: "UPDATE channels SET name = ?, sort = ? WHERE ckey = ?", args: [name, sort, ckey] });
+}
+export async function deleteChannel(ckey: string) {
+  const db = await getDb();
+  await db.execute({ sql: "DELETE FROM channels WHERE ckey = ?", args: [ckey] });
+}

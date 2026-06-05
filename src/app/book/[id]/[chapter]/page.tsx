@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBook, getChapter, listChapters, allChapterParams } from "@/lib/repo";
-import { categoryName, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { categoryNameOf } from "@/lib/taxonomy";
 import JsonLd from "@/components/JsonLd";
 import ViewBeacon from "@/components/ViewBeacon";
 import ReaderShell from "@/components/ReaderShell";
@@ -42,6 +43,7 @@ export default async function ChapterPage({ params }: Props) {
 
   // 按「实际存在的章节列表」算上/下章，避免残缺章节导致点下一章 404
   const chapters = await listChapters(bookId);
+  const catName = await categoryNameOf(book.category);
   const pos = chapters.findIndex((c) => c.idx === idx);
   const total = chapters.length;
   const prevIdx = pos > 0 ? chapters[pos - 1].idx : null;
@@ -53,7 +55,7 @@ export default async function ChapterPage({ params }: Props) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "首页", path: "/" },
-          { name: categoryName(book.category), path: `/category/${book.category}` },
+          { name: catName, path: `/category/${book.category}` },
           { name: book.title, path: `/book/${book.id}` },
           { name: chap.title, path: `/book/${book.id}/${chap.idx}` },
         ])}

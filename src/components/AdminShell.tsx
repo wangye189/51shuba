@@ -6,6 +6,7 @@ const MENU = [
   { href: "/admin", label: "数据看板" },
   { href: "/admin/users", label: "用户管理" },
   { href: "/admin/books", label: "内容管理" },
+  { href: "/admin/categories", label: "频道/分类" },
   { href: "/admin/links", label: "友链管理" },
 ];
 

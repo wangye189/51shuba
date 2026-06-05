@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBook, listChapters, hotRanking, allBookIds } from "@/lib/repo";
-import { categoryName, coverUrl, site } from "@/lib/config";
+import { coverUrl, site } from "@/lib/config";
+import { categoryNameOf } from "@/lib/taxonomy";
 import AdSlot from "@/components/AdSlot";
 import Cover from "@/components/Cover";
 import JsonLd from "@/components/JsonLd";
@@ -37,22 +38,23 @@ export default async function BookPage({ params }: Props) {
   if (!book) notFound();
 
   const [chapters, hot] = await Promise.all([listChapters(book.id), hotRanking(10)]);
+  const catName = await categoryNameOf(book.category);
   const firstIdx = chapters[0]?.idx;
   const lastIdx = chapters[chapters.length - 1]?.idx;
 
   return (
     <div className="space-y-3">
       <JsonLd data={[
-        bookJsonLd(book, chapters.length),
+        bookJsonLd(book, chapters.length, catName),
         breadcrumbJsonLd([
           { name: "首页", path: "/" },
-          { name: categoryName(book.category), path: `/category/${book.category}` },
+          { name: catName, path: `/category/${book.category}` },
           { name: book.title, path: `/book/${book.id}` },
         ]),
       ]} />
       <nav className="px-1 text-[12px] text-[var(--muted)]">
         <Link href="/" className="link">首页</Link> &gt;{" "}
-        <Link href={`/category/${book.category}`} className="link">{categoryName(book.category)}</Link> &gt; {book.title}
+        <Link href={`/category/${book.category}`} className="link">{catName}</Link> &gt; {book.title}
       </nav>
 
       {/* 书籍信息卡 */}
@@ -63,7 +65,7 @@ export default async function BookPage({ params }: Props) {
             <h1 className="text-xl font-bold text-[#222]">{book.title}</h1>
             <div className="mt-2 space-y-1 text-[13px] text-[#666]">
               <p>{book.author}</p>
-              <p>{categoryName(book.category)} · {book.status} · {chapters.length} 章</p>
+              <p>{catName} · {book.status} · {chapters.length} 章</p>
               <p>{(book.views / 10000).toFixed(1)}万点击</p>
             </div>
             {chapters.length > 0 && (
