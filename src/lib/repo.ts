@@ -195,3 +195,39 @@ export async function removeFromShelf(userId: number, bookId: number): Promise<v
     args: [userId, bookId],
   });
 }
+
+// ===== 后台管理 =====
+export async function adminStats() {
+  const db = await getDb();
+  const one = async (sql: string) => Number((await db.execute(sql)).rows[0].n);
+  const [users, books, chapters, shelves, todayUsers] = await Promise.all([
+    one("SELECT COUNT(*) AS n FROM users"),
+    one("SELECT COUNT(*) AS n FROM books"),
+    one("SELECT COUNT(*) AS n FROM chapters"),
+    one("SELECT COUNT(*) AS n FROM user_shelf"),
+    one("SELECT COUNT(*) AS n FROM users WHERE date(created_at) = date('now')"),
+  ]);
+  return { users, books, chapters, shelves, todayUsers };
+}
+
+export type AdminUserRow = { id: number; username: string; created_at: string; shelf_count: number };
+export async function listUsers(limit = 50, offset = 0): Promise<AdminUserRow[]> {
+  const db = await getDb();
+  const r = await db.execute({
+    sql: `SELECT u.id, u.username, u.created_at,
+                 (SELECT COUNT(*) FROM user_shelf s WHERE s.user_id = u.id) AS shelf_count
+          FROM users u ORDER BY u.id DESC LIMIT ? OFFSET ?`,
+    args: [limit, offset],
+  });
+  return r.rows as unknown as AdminUserRow[];
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  const db = await getDb();
+  await db.execute({ sql: "DELETE FROM user_shelf WHERE user_id = ?", args: [id] });
+  await db.execute({ sql: "DELETE FROM users WHERE id = ?", args: [id] });
+}
+
+export async function adminListBooks(limit = 50, offset = 0): Promise<BookRow[]> {
+  return rows(`${ROW_SELECT} ORDER BY b.id DESC LIMIT ? OFFSET ?`, [limit, offset]);
+}

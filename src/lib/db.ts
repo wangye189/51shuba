@@ -1,4 +1,5 @@
 import { createClient, type Client } from "@libsql/client";
+import bcrypt from "bcryptjs";
 import { seedIfEmpty } from "./seed";
 
 // 本地开发：file: 本地 SQLite 文件（沿用 data/book51.db，采集数据保留）
@@ -66,6 +67,16 @@ const SCHEMA = `
     UNIQUE(user_id, book_id)
   );
   CREATE INDEX IF NOT EXISTS idx_shelf_user ON user_shelf(user_id, created_at DESC);
+
+  -- 后台管理员（与读者 users 表分离）；按铁律预留 TOTP 两步验证字段
+  CREATE TABLE IF NOT EXISTS admins (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    username     TEXT NOT NULL UNIQUE,
+    password     TEXT NOT NULL,
+    totp_secret  TEXT NOT NULL DEFAULT '',
+    totp_enabled INTEGER NOT NULL DEFAULT 0,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `;
 
 async function init(): Promise<Client> {
@@ -74,7 +85,17 @@ async function init(): Promise<Client> {
   const client = createClient(authToken ? { url, authToken } : { url });
   await client.executeMultiple(SCHEMA);
   await seedIfEmpty(client);
+  await seedAdmin(client);
   return client;
+}
+
+// 首次无管理员时创建默认管理员（账号/密码可用环境变量覆盖）
+async function seedAdmin(client: Client): Promise<void> {
+  const r = await client.execute("SELECT COUNT(*) AS n FROM admins");
+  if (Number(r.rows[0].n) > 0) return;
+  const username = process.env.ADMIN_USERNAME || "admin";
+  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "admin888", 10);
+  await client.execute({ sql: "INSERT INTO admins (username, password) VALUES (?, ?)", args: [username, hash] });
 }
 
 /** 取数据库连接（首次调用建表 + 灌演示数据，结果 memoize）*/
