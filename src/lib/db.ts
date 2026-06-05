@@ -89,12 +89,17 @@ async function init(): Promise<Client> {
   return client;
 }
 
-// 首次无管理员时创建默认管理员（账号/密码可用环境变量覆盖）
+// 首次无管理员时创建默认管理员。
+// 安全：仓库公开，不能用硬编码默认密码上生产。
+// 生产环境必须显式设 ADMIN_PASSWORD 才会创建；否则跳过（无管理员，需手动建）。
+// 本地开发（非 production）回退 admin888，方便调试。
 async function seedAdmin(client: Client): Promise<void> {
   const r = await client.execute("SELECT COUNT(*) AS n FROM admins");
   if (Number(r.rows[0].n) > 0) return;
+  const password = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "admin888");
+  if (!password) return;
   const username = process.env.ADMIN_USERNAME || "admin";
-  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "admin888", 10);
+  const hash = await bcrypt.hash(password, 10);
   await client.execute({ sql: "INSERT INTO admins (username, password) VALUES (?, ?)", args: [username, hash] });
 }
 
