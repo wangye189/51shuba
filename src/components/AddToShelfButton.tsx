@@ -60,7 +60,7 @@ export default function AddToShelfButton({
     <button
       onClick={toggle}
       disabled={busy}
-      className="flex-1 rounded-lg border py-2.5 text-center text-[14px] font-medium transition-colors active:opacity-80 disabled:opacity-60"
+      className="w-full rounded-lg border py-2.5 text-center text-[14px] font-medium transition-colors active:opacity-80 disabled:opacity-60"
       style={{
         borderColor: faved ? "#b8001f" : "var(--border)",
         color: faved ? "#b8001f" : "#555",

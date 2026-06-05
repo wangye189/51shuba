@@ -70,12 +70,12 @@ export default async function BookPage({ params }: Props) {
               <p>{catName} · {book.status} · {chapters.length} 章</p>
               <p>{(book.views / 10000).toFixed(1)}万点击</p>
             </div>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 space-y-2">
               {chapters.length > 0 && (
-                <>
-                  <Link href={`/book/${book.id}/${firstIdx}`} className="flex-1 rounded-lg bg-[var(--accent)] py-2.5 text-center text-[14px] font-medium text-white active:opacity-80">开始阅读</Link>
-                  <Link href={`/book/${book.id}/${lastIdx}`} className="flex-1 rounded-lg border border-[var(--border)] py-2.5 text-center text-[14px] text-[#555] active:border-[var(--accent)]">读最新</Link>
-                </>
+                <div className="flex gap-2">
+                  <Link href={`/book/${book.id}/${firstIdx}`} className="flex-1 whitespace-nowrap rounded-lg bg-[var(--accent)] py-2.5 text-center text-[14px] font-medium text-white active:opacity-80">开始阅读</Link>
+                  <Link href={`/book/${book.id}/${lastIdx}`} className="flex-1 whitespace-nowrap rounded-lg border border-[var(--border)] py-2.5 text-center text-[14px] text-[#555] active:border-[var(--accent)]">读最新</Link>
+                </div>
               )}
               <AddToShelfButton bookId={book.id} bookTitle={book.title} channel={catChannel} />
             </div>
