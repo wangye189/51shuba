@@ -87,11 +87,12 @@ export async function allChapterParams(): Promise<{ book_id: number; idx: number
 }
 
 // ===== 首页榜单/列表 =====
-export type BookRow = Book & { last_title: string | null; chap_count: number };
+export type BookRow = Book & { last_title: string | null; last_idx: number | null; chap_count: number };
 
 const ROW_SELECT = `
   SELECT b.*,
          (SELECT title FROM chapters c WHERE c.book_id = b.id ORDER BY c.idx DESC LIMIT 1) AS last_title,
+         (SELECT idx   FROM chapters c WHERE c.book_id = b.id ORDER BY c.idx DESC LIMIT 1) AS last_idx,
          (SELECT COUNT(*) FROM chapters c WHERE c.book_id = b.id) AS chap_count
   FROM books b`;
 

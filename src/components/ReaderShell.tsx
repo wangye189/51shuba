@@ -60,7 +60,7 @@ export default function ReaderShell(p: Props) {
     setLh(Number(localStorage.getItem("rd_lh")) || 1.8);
     setThemeKey(localStorage.getItem("rd_theme") || "white");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
-    try { setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").includes(p.bookId)); } catch {}
+    try { setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").some((x: { id: number }) => x?.id === p.bookId)); } catch {}
     document.documentElement.classList.add("reader-mode");
     return () => {
       document.documentElement.classList.remove("reader-mode");
@@ -82,10 +82,10 @@ export default function ReaderShell(p: Props) {
   const setBrightness = (v: number) => { setBright(v); save("rd_bright", v); };
   const toggleNight = () => setTheme(themeKey === "dark" ? "white" : "dark");
   const toggleFav = () => {
-    let s: number[] = [];
-    try { s = JSON.parse(localStorage.getItem("shelf") || "[]"); } catch {}
-    const i = s.indexOf(p.bookId);
-    if (i >= 0) s.splice(i, 1); else s.push(p.bookId);
+    let s: { id: number; title: string }[] = [];
+    try { s = JSON.parse(localStorage.getItem("shelf") || "[]").filter((x: { id: number }) => x?.id != null); } catch {}
+    const i = s.findIndex((x) => x.id === p.bookId);
+    if (i >= 0) s.splice(i, 1); else s.unshift({ id: p.bookId, title: p.bookTitle });
     localStorage.setItem("shelf", JSON.stringify(s));
     setFaved(i < 0);
   };

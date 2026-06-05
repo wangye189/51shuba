@@ -37,8 +37,8 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-[1000px] items-center justify-between px-3 py-1.5">
             <span>{site.slogan}</span>
             <span className="flex gap-3">
-              <Link href="/" className="hover:text-[var(--accent)]">加入书签</Link>
-              <Link href="/" className="hover:text-[var(--accent)]">手机版</Link>
+              <Link href="/shelf" className="hover:text-[var(--accent)]">我的书架</Link>
+              <Link href="/about" className="hover:text-[var(--accent)]">关于</Link>
             </span>
           </div>
         </div>
@@ -86,8 +86,11 @@ export default function RootLayout({
             <Link href="/rank" className="px-4 py-2.5 hover:bg-black/30">
               排行榜
             </Link>
-            <Link href="/?status=完本" className="px-4 py-2.5 hover:bg-black/30">
+            <Link href="/complete" className="px-4 py-2.5 hover:bg-black/30">
               完本
+            </Link>
+            <Link href="/shelf" className="px-4 py-2.5 hover:bg-black/30">
+              书架
             </Link>
           </div>
         </nav>
@@ -99,9 +102,9 @@ export default function RootLayout({
         <footer className="mt-4 border-t border-[var(--border)] bg-white py-5 text-center text-xs text-[var(--muted)]">
           <div className="mx-auto max-w-[1000px] space-y-1 px-3">
             <p className="space-x-3">
-              <Link href="/" className="hover:text-[var(--accent)]">关于我们</Link>
-              <Link href="/" className="hover:text-[var(--accent)]">联系方式</Link>
-              <Link href="/" className="hover:text-[var(--accent)]">免责声明</Link>
+              <Link href="/about" className="hover:text-[var(--accent)]">关于我们</Link>
+              <Link href="/about#contact" className="hover:text-[var(--accent)]">联系方式</Link>
+              <Link href="/about#disclaimer" className="hover:text-[var(--accent)]">免责声明</Link>
               <Link href="/sitemap.xml" className="hover:text-[var(--accent)]">网站地图</Link>
             </p>
             <p>© 2026 {site.name} · {site.slogan}</p>
