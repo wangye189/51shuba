@@ -4,6 +4,7 @@ import "./globals.css";
 import { site, categories } from "@/lib/config";
 import Analytics from "@/components/Analytics";
 import RefTracker from "@/components/RefTracker";
+import AuthNav from "@/components/AuthNav";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -36,7 +37,8 @@ export default function RootLayout({
         <div className="site-bar border-b border-[var(--border)] bg-white text-xs text-[var(--muted)]">
           <div className="mx-auto flex max-w-[1000px] items-center justify-between px-3 py-1.5">
             <span>{site.slogan}</span>
-            <span className="flex gap-3">
+            <span className="flex items-center gap-3">
+              <AuthNav />
               <Link href="/shelf" className="hover:text-[var(--accent)]">我的书架</Link>
               <Link href="/about" className="hover:text-[var(--accent)]">关于</Link>
             </span>

@@ -49,6 +49,23 @@ const SCHEMA = `
   );
   CREATE INDEX IF NOT EXISTS idx_fll_link ON friend_link_logs(link_id, type, created_at);
   CREATE INDEX IF NOT EXISTS idx_fll_dedup ON friend_link_logs(link_id, type, ip, created_at);
+
+  -- 面向读者的账号体系（不绑邮箱/手机，账号唯一即可）
+  CREATE TABLE IF NOT EXISTS users (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    username   TEXT NOT NULL UNIQUE,
+    password   TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  -- 用户书架（登录后跟账号走、跨设备同步）
+  CREATE TABLE IF NOT EXISTS user_shelf (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, book_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_shelf_user ON user_shelf(user_id, created_at DESC);
 `;
 
 async function init(): Promise<Client> {

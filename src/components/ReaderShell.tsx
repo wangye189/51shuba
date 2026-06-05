@@ -43,6 +43,7 @@ export default function ReaderShell(p: Props) {
   const [bars, setBars] = useState(true);
   const [panel, setPanel] = useState(false);
   const [faved, setFaved] = useState(false);
+  const [user, setUser] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [chaps, setChaps] = useState<Chap[]>([p.initial]);
@@ -60,7 +61,19 @@ export default function ReaderShell(p: Props) {
     setLh(Number(localStorage.getItem("rd_lh")) || 1.8);
     setThemeKey(localStorage.getItem("rd_theme") || "white");
     setBright(Number(localStorage.getItem("rd_bright")) || 0);
-    try { setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").some((x: { id: number }) => x?.id === p.bookId)); } catch {}
+    // 登录则查账号书架是否已收藏，否则查本地
+    (async () => {
+      try {
+        const me = await fetch("/api/auth/me").then((r) => r.json());
+        if (me.user) {
+          setUser(me.user);
+          const data = await fetch("/api/shelf").then((r) => r.json());
+          setFaved((data.books || []).some((b: { id: number }) => b.id === p.bookId));
+        } else {
+          setFaved(JSON.parse(localStorage.getItem("shelf") || "[]").some((x: { id: number }) => x?.id === p.bookId));
+        }
+      } catch { /* ignore */ }
+    })();
     document.documentElement.classList.add("reader-mode");
     return () => {
       document.documentElement.classList.remove("reader-mode");
@@ -81,7 +94,21 @@ export default function ReaderShell(p: Props) {
   const setTheme = (k: string) => { setThemeKey(k); save("rd_theme", k); };
   const setBrightness = (v: number) => { setBright(v); save("rd_bright", v); };
   const toggleNight = () => setTheme(themeKey === "dark" ? "white" : "dark");
-  const toggleFav = () => {
+  const toggleFav = async () => {
+    // 已登录：写账号书架（跨设备）
+    if (user) {
+      const adding = !faved;
+      setFaved(adding);
+      try {
+        await fetch("/api/shelf", {
+          method: adding ? "POST" : "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookId: p.bookId }),
+        });
+      } catch { setFaved(!adding); }
+      return;
+    }
+    // 游客：写本地书架
     let s: { id: number; title: string }[] = [];
     try { s = JSON.parse(localStorage.getItem("shelf") || "[]").filter((x: { id: number }) => x?.id != null); } catch {}
     const i = s.findIndex((x) => x.id === p.bookId);

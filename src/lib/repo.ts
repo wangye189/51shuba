@@ -130,3 +130,57 @@ export function searchBooks(q: string, limit = 50): Promise<BookRow[]> {
     limit,
   ]);
 }
+
+// ===== 用户体系 =====
+export type User = { id: number; username: string; password: string };
+
+export async function createUser(username: string, passwordHash: string): Promise<number> {
+  const db = await getDb();
+  const r = await db.execute({
+    sql: `INSERT INTO users (username, password) VALUES (?, ?)`,
+    args: [username, passwordHash],
+  });
+  return Number(r.lastInsertRowid);
+}
+
+export async function getUserByUsername(username: string): Promise<User | undefined> {
+  const db = await getDb();
+  const r = await db.execute({
+    sql: `SELECT id, username, password FROM users WHERE username = ?`,
+    args: [username],
+  });
+  return r.rows[0] as unknown as User | undefined;
+}
+
+// ===== 用户书架（登录后跟账号走）=====
+export async function getUserShelf(userId: number): Promise<BookRow[]> {
+  return rows(
+    `${ROW_SELECT}
+     JOIN user_shelf s ON s.book_id = b.id
+     WHERE s.user_id = ?
+     ORDER BY s.created_at DESC`,
+    [userId],
+  );
+}
+
+export async function shelfBookIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  const r = await db.execute({ sql: `SELECT book_id FROM user_shelf WHERE user_id = ?`, args: [userId] });
+  return r.rows.map((x) => Number((x as unknown as { book_id: number }).book_id));
+}
+
+export async function addToShelf(userId: number, bookId: number): Promise<void> {
+  const db = await getDb();
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO user_shelf (user_id, book_id) VALUES (?, ?)`,
+    args: [userId, bookId],
+  });
+}
+
+export async function removeFromShelf(userId: number, bookId: number): Promise<void> {
+  const db = await getDb();
+  await db.execute({
+    sql: `DELETE FROM user_shelf WHERE user_id = ? AND book_id = ?`,
+    args: [userId, bookId],
+  });
+}
