@@ -189,11 +189,13 @@ export default function ReaderShell(p: Props) {
       <div className="pointer-events-none fixed inset-0 z-[60] bg-black" style={{ opacity: bright }} />
 
       {/* 顶栏 */}
-      <header className="fixed inset-x-0 top-0 z-[70] flex h-12 items-center gap-2 px-3 transition-transform duration-200"
+      <header className="fixed inset-x-0 top-0 z-[70] h-12 transition-transform duration-200"
         style={{ background: theme.bg, borderBottom: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(-110%)" }}>
-        <Link href={`/book/${p.bookId}`} className="-ml-1 shrink-0 px-1" aria-label="返回"><Ic d={ICON.prev} /></Link>
-        <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{curTitle}</div>
-        <span className="shrink-0 text-[12px] tabular-nums opacity-50">{curNo}/{p.total}</span>
+        <div className="mx-auto flex h-full max-w-2xl items-center gap-2 px-5">
+          <Link href={`/book/${p.bookId}`} className="-ml-1 shrink-0 px-1" aria-label="返回"><Ic d={ICON.prev} /></Link>
+          <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{curTitle}</div>
+          <span className="shrink-0 text-[12px] tabular-nums opacity-50">{curNo}/{p.total}</span>
+        </div>
       </header>
 
       {/* 正文（多章连续）*/}
@@ -221,6 +223,7 @@ export default function ReaderShell(p: Props) {
       {/* 底部菜单：两层（上=操作，下=图标工具）*/}
       <div className="fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200"
         style={{ background: theme.bg, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: bars ? "translateY(0)" : "translateY(120%)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="mx-auto max-w-2xl">
         {/* 上层：上一章 / 加入书架 / 下一章 */}
         <div className="flex items-stretch gap-2 px-3 pb-1 pt-2">
           {p.prevHref
@@ -239,11 +242,13 @@ export default function ReaderShell(p: Props) {
           <button onClick={toggleNight} className={icBtn}><Ic d={themeKey === "dark" ? ICON.sun : ICON.moon} />{themeKey === "dark" ? "日间" : "夜间"}</button>
           <button onClick={() => { setPanel((v) => !v); setBars(true); }} className={icBtn}><Ic d={ICON.settings} />设置</button>
         </div>
+        </div>
       </div>
 
       {/* 设置抽屉 */}
-      <div className="fixed inset-x-0 bottom-[7.5rem] z-[75] px-4 py-4 transition-transform duration-200"
+      <div className="fixed inset-x-0 bottom-[7.5rem] z-[75] transition-transform duration-200"
         style={{ background: theme.bg, borderTop: `1px solid ${theme.fg}22`, color: theme.fg, transform: panel ? "translateY(0)" : "translateY(160%)", boxShadow: "0 -8px 24px rgba(0,0,0,.18)" }}>
+        <div className="mx-auto max-w-2xl px-4 py-4">
         <div className="mb-3 flex items-center gap-3">
           <span className="w-10 text-[12px] opacity-60">亮度</span>
           <span className="text-[11px]">☀</span>
@@ -269,6 +274,7 @@ export default function ReaderShell(p: Props) {
             <button key={t.key} onClick={() => setTheme(t.key)} className="h-9 flex-1 rounded-lg text-[12px]"
               style={{ background: t.bg, color: t.fg, border: `${themeKey === t.key ? 2 : 1}px solid ${themeKey === t.key ? "#b8001f" : t.fg + "33"}` }}>{t.label}</button>
           ))}
+        </div>
         </div>
       </div>
     </div>
