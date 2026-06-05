@@ -111,8 +111,8 @@ async function init(): Promise<Client> {
 async function seedTaxonomy(client: Client): Promise<void> {
   const ch = await client.execute("SELECT COUNT(*) AS n FROM channels");
   if (Number(ch.rows[0].n) === 0) {
-    await client.execute({ sql: "INSERT INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["boy", "男生", 0] });
-    await client.execute({ sql: "INSERT INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["girl", "女生", 1] });
+    await client.execute({ sql: "INSERT OR IGNORE INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["boy", "男生", 0] });
+    await client.execute({ sql: "INSERT OR IGNORE INTO channels (ckey, name, sort) VALUES (?, ?, ?)", args: ["girl", "女生", 1] });
   }
   const ca = await client.execute("SELECT COUNT(*) AS n FROM categories");
   if (Number(ca.rows[0].n) === 0) {
@@ -125,7 +125,7 @@ async function seedTaxonomy(client: Client): Promise<void> {
       ["yanqing", "言情", "girl", 0],
     ];
     for (const [slug, name, channel, sort] of seed) {
-      await client.execute({ sql: "INSERT INTO categories (slug, name, channel, sort) VALUES (?, ?, ?, ?)", args: [slug, name, channel, sort] });
+      await client.execute({ sql: "INSERT OR IGNORE INTO categories (slug, name, channel, sort) VALUES (?, ?, ?, ?)", args: [slug, name, channel, sort] });
     }
   }
 }
@@ -141,7 +141,7 @@ async function seedAdmin(client: Client): Promise<void> {
   if (!password) return;
   const username = process.env.ADMIN_USERNAME || "admin";
   const hash = await bcrypt.hash(password, 10);
-  await client.execute({ sql: "INSERT INTO admins (username, password) VALUES (?, ?)", args: [username, hash] });
+  await client.execute({ sql: "INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)", args: [username, hash] });
 }
 
 /** 取数据库连接（首次调用建表 + 灌演示数据，结果 memoize）*/
