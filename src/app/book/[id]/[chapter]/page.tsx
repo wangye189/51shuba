@@ -62,13 +62,10 @@ export default async function ChapterPage({ params }: Props) {
       <ReaderShell
         bookId={bookId}
         bookTitle={book.title}
-        chapterTitle={chap.title}
-        idx={curNo}
         total={total}
-        content={chap.content}
         prevHref={prevIdx ? `/book/${bookId}/${prevIdx}` : null}
-        nextHref={nextIdx ? `/book/${bookId}/${nextIdx}` : null}
         catalogHref={`/book/${bookId}`}
+        initial={{ idx, no: curNo, title: chap.title, content: chap.content, nextIdx }}
       />
     </>
   );
