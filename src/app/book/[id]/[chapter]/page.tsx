@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBook, getChapter, listChapters, allChapterParams } from "@/lib/repo";
+import { getBook, getChapter, listChapters } from "@/lib/repo";
 import { site } from "@/lib/config";
 import { categoryNameOf, categoryChannelOf } from "@/lib/taxonomy";
 import JsonLd from "@/components/JsonLd";
@@ -12,8 +12,8 @@ export const revalidate = 86400; // 构建时预渲染为静态 + 每天再生
 
 // 构建时把所有章节预渲染成静态 HTML（CDN 秒开，不再每次查库）
 export async function generateStaticParams() {
-  const rows = await allChapterParams();
-  return rows.map((r) => ({ id: String(r.book_id), chapter: String(r.idx) }));
+  // 不预生成全部章节页（几千页会拖垮连云库的 build）；运行时按需渲染 + revalidate 缓存
+  return [];
 }
 
 type Props = { params: Promise<{ id: string; chapter: string }> };

@@ -1,12 +1,7 @@
-import { getChapter, listChapters, allChapterParams } from "@/lib/repo";
+import { getChapter, listChapters } from "@/lib/repo";
 
-// 章节内容接口：构建时全部预生成为静态 JSON（CDN 秒回，不查库），供阅读器无缝续载下一章
-export const dynamic = "force-static";
-
-export async function generateStaticParams() {
-  const rows = await allChapterParams();
-  return rows.map((r) => ({ id: String(r.book_id), idx: String(r.idx) }));
-}
+// 章节内容接口：运行时按需生成（不在 build 时预生成几千个 JSON），供阅读器续载下一章
+export const dynamic = "force-dynamic";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string; idx: string }> }) {
   const { id, idx } = await ctx.params;
