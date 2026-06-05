@@ -51,6 +51,7 @@ export default function ReaderShell(p: Props) {
   const loadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const secRefs = useRef<Record<number, HTMLElement | null>>({});
+  const lastY = useRef(0);
 
   const theme = THEMES.find((t) => t.key === themeKey) || THEMES[0];
 
@@ -110,6 +111,11 @@ export default function ReaderShell(p: Props) {
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
+    const y = el.scrollTop;
+    // 往下滑阅读 → 自动隐藏工具栏(沉浸)；往上滑(回看) → 唤出
+    if (y > lastY.current + 6 && y > 40) { setBars(false); setPanel(false); }
+    else if (y < lastY.current - 10) setBars(true);
+    lastY.current = y;
     if (el.scrollHeight - el.scrollTop - el.clientHeight < 350) loadNext();
     let cn = chaps[0]?.no, ct = chaps[0]?.title;
     for (const c of chaps) {
