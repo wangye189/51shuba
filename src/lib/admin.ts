@@ -11,7 +11,8 @@ const SECRET = () =>
 
 export const adminCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  // VPS 是 http；上 https 后设 COOKIE_SECURE=1
+  secure: process.env.COOKIE_SECURE === "1",
   sameSite: "lax" as const,
   path: "/",
   maxAge: MAX_AGE,

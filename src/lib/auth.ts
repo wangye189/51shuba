@@ -10,7 +10,8 @@ const SECRET = () =>
 // 注意：本地是 http，secure 必须按环境，否则浏览器不保存 cookie，本地登录会失败
 export const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  // VPS 是 http，secure cookie 在 http 下浏览器不保存；上 https 后设 COOKIE_SECURE=1
+  secure: process.env.COOKIE_SECURE === "1",
   sameSite: "lax" as const,
   path: "/",
   maxAge: MAX_AGE,
